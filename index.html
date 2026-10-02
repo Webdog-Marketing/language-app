@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1B2B4B">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Revision">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Revision cards: Polish &amp; Portuguese</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Literata:ital,opsz,wght@0,7..72,500;0,7..72,600;1,7..72,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E4EAF3; --surface:#F3F6FB; --ink:#17233A; --muted:#56637B; --line:#C5D0E0;
+  --pl:#C4122F; --pt:#00843A; --on-accent:#FFFFFF;
+  --paper:#FFFDF6; --paper-ink:#1A2438; --paper-muted:#5E6A80; --rule:#D3DEEE; --margin:#E46C6C;
+  --ok:#1E7A46; --ok-bg:#DDF1E4; --bad:#B3261E; --bad-bg:#F8DEDB;
+  --shadow:0 1px 0 rgba(23,35,58,.08), 0 18px 30px -18px rgba(23,35,58,.55);
+  --ui:"Bricolage Grotesque", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --serif:"Literata", Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101B30; --surface:#18263F; --ink:#E6EBF4; --muted:#9BA8BF; --line:#2B3B59;
+    --pl:#FF6B80; --pt:#45C97A; --on-accent:#101B30;
+    --ok-bg:#1D3B2B; --bad-bg:#45201E; --ok:#6BD69A; --bad:#FF8A80;
+    --shadow:0 1px 0 rgba(0,0,0,.3), 0 20px 34px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101B30; --surface:#18263F; --ink:#E6EBF4; --muted:#9BA8BF; --line:#2B3B59;
+  --pl:#FF6B80; --pt:#45C97A; --on-accent:#101B30;
+  --ok-bg:#1D3B2B; --bad-bg:#45201E; --ok:#6BD69A; --bad:#FF8A80;
+  --shadow:0 1px 0 rgba(0,0,0,.3), 0 20px 34px -18px rgba(0,0,0,.8);
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%;background:var(--bg)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body{--accent:var(--pl);--card-accent:#C4122F}
+body[data-lang="pt"]{--accent:var(--pt);--card-accent:#00843A}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+.app{max-width:560px;margin:0 auto;padding:16px 16px 40px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 14px}
+.top h1{margin:0;font-size:1.35rem;font-weight:800;letter-spacing:-.01em;line-height:1.1}
+.top p{margin:2px 0 0;color:var(--muted);font-size:.85rem}
+
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{border:0;background:transparent;padding:7px 13px;border-radius:999px;cursor:pointer;font-weight:600;font-size:.9rem;color:var(--muted)}
+.seg button[aria-selected="true"]{background:var(--accent);color:var(--on-accent)}
+
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--line);margin-bottom:12px}
+.modes button{border:0;background:none;padding:10px 0 11px;font-weight:600;font-size:1rem;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+.modes button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+details.filters{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:16px}
+details.filters summary{list-style:none;cursor:pointer;padding:11px 14px;display:flex;justify-content:space-between;gap:10px;font-weight:600}
+details.filters summary::-webkit-details-marker{display:none}
+details.filters summary .sum{color:var(--muted);font-weight:400;font-size:.88rem;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}
+details.filters summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin-top:5px;flex:none;transition:transform .2s}
+details.filters[open] summary::after{transform:rotate(225deg);margin-top:9px}
+.group{padding:2px 14px 12px}
+.group h2{font-size:.85rem;font-weight:600;color:var(--muted);margin:4px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 12px;font-size:.88rem;cursor:pointer;color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.chip .n{opacity:.7;font-size:.8em;margin-left:4px}
+
+.meta{display:flex;justify-content:space-between;color:var(--muted);font-size:.86rem;margin:0 2px 10px}
+
+/* The index card */
+.card{position:relative;perspective:1400px;min-height:300px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.inner{position:relative;width:100%;min-height:300px;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.3,.7,.2,1)}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.back{transform:rotateY(180deg)}
+.paper{background-color:var(--paper);color:var(--paper-ink);border-radius:5px;box-shadow:var(--shadow);
+  background-image:
+    linear-gradient(var(--margin),var(--margin)),
+    repeating-linear-gradient(to bottom, transparent 0 33px, var(--rule) 33px 34px);
+  background-size:100% 2px, 100% 100%;
+  background-position:0 58px, 0 58px;
+  background-repeat:no-repeat, no-repeat;
+  padding:18px 22px 22px;display:flex;flex-direction:column}
+.tag{font-size:.82rem;color:var(--paper-muted);height:30px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tag b{font-weight:600;color:var(--card-accent)}
+.face-body{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding-top:18px}
+.q{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,8vw,2.6rem);line-height:1.15;letter-spacing:-.01em;word-break:break-word}
+.person{margin-top:10px;font-size:1.05rem;font-weight:600;background:#EEF2F8;border-radius:4px;padding:3px 9px;color:var(--paper-ink)}
+.a{font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(1.8rem,7.5vw,2.4rem);line-height:1.2;color:var(--card-accent);word-break:break-word}
+.recap{font-size:.92rem;color:var(--paper-muted);margin-bottom:8px}
+.note{margin-top:14px;font-family:var(--serif);font-size:1rem;color:var(--paper-muted)}
+
+.hint{text-align:center;color:var(--muted);font-size:.85rem;margin:12px 0 14px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{border-radius:10px;padding:13px 14px;font-weight:600;font-size:1rem;cursor:pointer;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn:active{transform:translateY(1px)}
+.tools{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-top:18px;font-size:.88rem;color:var(--muted)}
+.link{border:0;background:none;padding:4px 0;color:var(--muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer;font-size:.88rem}
+.tools label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.tools input{accent-color:var(--accent);width:17px;height:17px}
+
+/* Quiz */
+.progress{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:10px}
+.progress span{display:block;height:100%;background:var(--accent);transition:width .3s}
+.qcard{min-height:190px}
+.options{display:grid;gap:9px;margin-top:16px}
+.opt{text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:13px 15px;font-family:var(--serif);font-size:1.1rem;cursor:pointer;color:var(--ink)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--ok);background:var(--ok-bg);color:var(--ink)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg);color:var(--ink)}
+.opt.dim{opacity:.55}
+.feedback{min-height:24px;margin:12px 2px 10px;font-weight:600}
+.feedback.good{color:var(--ok)} .feedback.bad{color:var(--bad)}
+.setup .paper,.end .paper{min-height:0;padding-bottom:24px}
+.big{font-family:var(--serif);font-weight:600;font-size:2.6rem;line-height:1.1;margin-top:22px}
+.small{color:var(--paper-muted);font-size:.95rem;margin-top:6px}
+.len{display:flex;gap:8px;margin:18px 0 6px}
+.len .chip{color:var(--paper-ink);border-color:#C9D4E4;font-size:1rem;padding:8px 16px}
+.len .chip[aria-pressed="true"]{background:var(--card-accent);border-color:var(--card-accent);color:#fff}
+.misses{margin:18px 0 0;padding:0;list-style:none}
+.misses li{padding:9px 0;border-top:1px solid var(--line);font-size:.95rem}
+.misses .mq{color:var(--muted)}
+.misses .ma{font-family:var(--serif);font-weight:600}
+.empty{text-align:left}
+.stack{display:grid;gap:10px;margin-top:16px}
+
+@media (prefers-reduced-motion: reduce){
+  .inner{transition:none}
+  .progress span{transition:none}
+}
+</style>
+</head>
+<body data-lang="pl">
+<div class="app">
+  <header class="top">
+    <div>
+      <h1>Revision cards</h1>
+      <p id="langLine">Polish verbs, days and time</p>
+    </div>
+    <div class="seg" role="tablist" aria-label="Language">
+      <button role="tab" data-lang="pl">Polski</button>
+      <button role="tab" data-lang="pt">Português</button>
+    </div>
+  </header>
+
+  <div class="modes" role="tablist" aria-label="Mode">
+    <button role="tab" data-mode="flash">Flashcards</button>
+    <button role="tab" data-mode="quiz">Quiz</button>
+  </div>
+
+  <details class="filters" id="filters">
+    <summary><span>What to practise</span><span class="sum" id="filterSum"></span></summary>
+    <div class="group"><h2>Topics</h2><div class="chips" id="topicChips"></div></div>
+    <div class="group" id="tenseGroup"><h2>Tenses (for verb forms)</h2><div class="chips" id="tenseChips"></div></div>
+  </details>
+
+  <main id="view" aria-live="polite"></main>
+</div>
+
+<script>
+/* ---------- helpers ---------- */
+const split = s => s.split(",");
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const sample = (a, n) => shuffle(a).slice(0, n);
+
+const CARDS = { pl: [], pt: [] };
+function add(lang, c) { c.lang = lang; c.id = lang + ":" + c.topic + ":" + CARDS[lang].length; CARDS[lang].push(c); }
+
+/* ---------- Polish ---------- */
+const P6 = ["ja", "ty", "on / ona / ono", "my", "wy", "oni / one"];
+const P13 = ["ja (m)", "ja (f)", "ty (m)", "ty (f)", "on", "ona", "ono", "my (virile)", "my (non-virile)", "wy (virile)", "wy (non-virile)", "oni", "one"];
+const GEN = [0, 1, 0, 1, 0, 1, 2, 3, 4, 3, 4, 3, 4];
+const AUX = [0, 0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5];
+const BEDE = split("będę,będziesz,będzie,będziemy,będziecie,będą");
+const PL_TENSES = { pres: "Present", past: "Past", futc: "Future with będę", futp: "Simple future", cond: "Conditional", imp: "Imperative" };
+
+function plPast(l, lm) { const [m, f, n, v, nv] = l, s = lm || m; return [s + "em", f + "m", s + "eś", f + "ś", m, f, n, v + "śmy", nv + "śmy", v + "ście", nv + "ście", v, nv]; }
+function plCond(l) { const [m, f, n, v, nv] = l; return [m + "bym", f + "bym", m + "byś", f + "byś", m + "by", f + "by", n + "by", v + "byśmy", nv + "byśmy", v + "byście", nv + "byście", v + "by", nv + "by"]; }
+function plComp(l) { return P13.map((_, i) => BEDE[AUX[i]] + " " + l[GEN[i]]); }
+
+const PLV = [
+  { inf: "być", en: "to be", pres: "jestem,jesteś,jest,jesteśmy,jesteście,są", l: "był,była,było,byli,były", fut: "będę,będziesz,będzie,będziemy,będziecie,będą", imp: "bądź,bądźmy,bądźcie" },
+  { inf: "mieć", en: "to have", pres: "mam,masz,ma,mamy,macie,mają", l: "miał,miała,miało,mieli,miały", comp: 1, imp: "miej,miejmy,miejcie" },
+  { inf: "czytać", en: "to read", pres: "czytam,czytasz,czyta,czytamy,czytacie,czytają", l: "czytał,czytała,czytało,czytali,czytały", comp: 1, pf: "przeczytać", fut: "przeczytam,przeczytasz,przeczyta,przeczytamy,przeczytacie,przeczytają", imp: "czytaj,czytajmy,czytajcie" },
+  { inf: "pisać", en: "to write", pres: "piszę,piszesz,pisze,piszemy,piszecie,piszą", l: "pisał,pisała,pisało,pisali,pisały", comp: 1, pf: "napisać", fut: "napiszę,napiszesz,napisze,napiszemy,napiszecie,napiszą", imp: "pisz,piszmy,piszcie" },
+  { inf: "robić", en: "to do, to make", pres: "robię,robisz,robi,robimy,robicie,robią", l: "robił,robiła,robiło,robili,robiły", comp: 1, pf: "zrobić", fut: "zrobię,zrobisz,zrobi,zrobimy,zrobicie,zrobią", imp: "rób,róbmy,róbcie" },
+  { inf: "iść", en: "to go (on foot)", pres: "idę,idziesz,idzie,idziemy,idziecie,idą", l: "szedł,szła,szło,szli,szły", pf: "pójść", fut: "pójdę,pójdziesz,pójdzie,pójdziemy,pójdziecie,pójdą", imp: "idź,idźmy,idźcie" },
+  { inf: "chcieć", en: "to want", pres: "chcę,chcesz,chce,chcemy,chcecie,chcą", l: "chciał,chciała,chciało,chcieli,chciały", comp: 1 },
+  { inf: "móc", en: "can, to be able", pres: "mogę,możesz,może,możemy,możecie,mogą", l: "mógł,mogła,mogło,mogli,mogły", lm: "mogł", comp: 1 },
+  { inf: "jechać", en: "to go (by vehicle)", pres: "jadę,jedziesz,jedzie,jedziemy,jedziecie,jadą", l: "jechał,jechała,jechało,jechali,jechały", pf: "pojechać", fut: "pojadę,pojedziesz,pojedzie,pojedziemy,pojedziecie,pojadą", imp: "jedź,jedźmy,jedźcie" },
+  { inf: "jeść", en: "to eat", pres: "jem,jesz,je,jemy,jecie,jedzą", l: "jadł,jadła,jadło,jedli,jadły", pf: "zjeść", fut: "zjem,zjesz,zje,zjemy,zjecie,zjedzą", imp: "jedz,jedzmy,jedzcie" }
+];
+PLV.forEach(v => {
+  const l = split(v.l), f = (tense, verb, persons, forms) => forms.forEach((a, i) => add("pl", { topic: "forms", tense, verb, q: verb, person: persons[i], a, note: v.en }));
+  f("pres", v.inf, P6, split(v.pres));
+  f("past", v.inf, P13, plPast(l, v.lm));
+  if (v.comp) f("futc", v.inf, P13, plComp(l));
+  if (v.fut) f("futp", v.pf || v.inf, P6, split(v.fut));
+  f("cond", v.inf, P13, plCond(l));
+  if (v.imp) f("imp", v.inf, ["ty", "my", "wy"], split(v.imp));
+});
+
+const PL_MEAN = [
+  ["to play", "grać / zagrać", "gram"], ["to train", "trenować / potrenować", "trenuję"], ["to run", "biegać / pobiegać", "biegam"],
+  ["to shoot, to score", "strzelać / strzelić", "strzelam"], ["to win", "wygrywać / wygrać", "wygrywam"], ["to lose (a match)", "przegrywać / przegrać", "przegrywam"],
+  ["to start", "zaczynać / zacząć", "zaczynam"], ["to finish", "kończyć / skończyć", "kończę"], ["to help", "pomagać / pomóc", "pomagam"],
+  ["to work", "pracować / popracować", "pracuję"], ["to call (phone)", "dzwonić / zadzwonić", "dzwonię"], ["to ask", "pytać / zapytać", "pytam"],
+  ["to answer", "odpowiadać / odpowiedzieć", "odpowiadam"], ["to meet", "spotykać się / spotkać się", "spotykam się"], ["to wait", "czekać / poczekać", "czekam"],
+  ["to pay", "płacić / zapłacić", "płacę"], ["to buy", "kupować / kupić", "kupuję"], ["to give", "dawać / dać", "daję"], ["to take", "brać / wziąć", "biorę"],
+  ["to speak, to say", "mówić / powiedzieć", "mówię"], ["to see", "widzieć / zobaczyć", "widzę"], ["to think", "myśleć / pomyśleć", "myślę"],
+  ["to understand", "rozumieć / zrozumieć", "rozumiem"], ["to learn", "uczyć się / nauczyć się", "uczę się"], ["to like", "lubić / polubić", "lubię"],
+  ["to live (reside)", "mieszkać / zamieszkać", "mieszkam"], ["to get up", "wstawać / wstać", "wstaję"], ["to sleep", "spać / wyspać się", "śpię"],
+  ["to drink", "pić / wypić", "piję"], ["to come back", "wracać / wrócić", "wracam"], ["to come (on foot)", "przychodzić / przyjść", "przychodzę"],
+  ["to open", "otwierać / otworzyć", "otwieram"], ["to close", "zamykać / zamknąć", "zamykam"], ["to do, to make", "robić / zrobić", "robię"],
+  ["to read", "czytać / przeczytać", "czytam"], ["to write", "pisać / napisać", "piszę"], ["to eat", "jeść / zjeść", "jem"],
+  ["to go (on foot)", "iść / pójść", "idę"], ["to go (by vehicle)", "jechać / pojechać", "jadę"], ["to want", "chcieć", "chcę"],
+  ["can, to be able", "móc", "mogę"], ["to know (a fact)", "wiedzieć", "wiem"], ["to know (a person, place)", "znać", "znam"],
+  ["to be", "być", "jestem"], ["to have", "mieć", "mam"]
+];
+PL_MEAN.forEach(([en, pl, ja]) => {
+  add("pl", { topic: "meanings", tag: "Verb", q: en, a: pl, note: "ja " + ja });
+  const parts = pl.split(" / ");
+  if (parts.length === 2) add("pl", { topic: "aspect", tag: "Perfective partner", q: parts[0], person: en, a: parts[1], note: "imperfective → perfective" });
+});
+
+const PL_DAYS = [["Monday", "poniedziałek", "w poniedziałek"], ["Tuesday", "wtorek", "we wtorek"], ["Wednesday", "środa", "w środę"], ["Thursday", "czwartek", "w czwartek"], ["Friday", "piątek", "w piątek"], ["Saturday", "sobota", "w sobotę"], ["Sunday", "niedziela", "w niedzielę"], ["weekend", "weekend", "w weekend"]];
+PL_DAYS.forEach(([en, w, on]) => { add("pl", { topic: "days", tag: "Day", q: en, a: w, note: "on " + en + ": " + on }); add("pl", { topic: "days", tag: "Day", q: "on " + en, a: on }); });
+
+const PL_TOD = [["morning", "ranek", "in the morning", "rano"], ["late morning", "przedpołudnie", "in the late morning", "przed południem"], ["noon", "południe", "at noon", "w południe"], ["afternoon", "popołudnie", "in the afternoon", "po południu"], ["evening", "wieczór", "in the evening", "wieczorem"], ["night", "noc", "at night", "w nocy"], ["midnight", "północ", "at midnight", "o północy"], ["today", "dziś / dzisiaj"], ["tomorrow", "jutro"], ["yesterday", "wczoraj"], ["this morning", "dziś rano"], ["tonight", "dziś wieczorem"], ["good morning / good day", "dzień dobry"], ["good evening", "dobry wieczór"], ["good night", "dobranoc"]];
+PL_TOD.forEach(([en, w, en2, w2]) => { add("pl", { topic: "daytimes", tag: "Time of day", q: en, a: w }); if (en2) add("pl", { topic: "daytimes", tag: "Time of day", q: en2, a: w2 }); });
+
+const PL_HOURS = ["pierwsza", "druga", "trzecia", "czwarta", "piąta", "szósta", "siódma", "ósma", "dziewiąta", "dziesiąta", "jedenasta", "dwunasta"];
+const PL_AT = ["o pierwszej", "o drugiej", "o trzeciej", "o czwartej", "o piątej", "o szóstej", "o siódmej", "o ósmej", "o dziewiątej", "o dziesiątej", "o jedenastej", "o dwunastej"];
+PL_HOURS.forEach((h, i) => { add("pl", { topic: "clock", tag: "What time is it?", q: "It's " + (i + 1) + ":00", a: "jest " + h }); add("pl", { topic: "clock", tag: "At what time?", q: "at " + (i + 1) + ":00", a: PL_AT[i] }); });
+["trzynasta", "czternasta", "piętnasta", "szesnasta", "siedemnasta", "osiemnasta", "dziewiętnasta", "dwudziesta", "dwudziesta pierwsza", "dwudziesta druga", "dwudziesta trzecia"].forEach((h, i) => add("pl", { topic: "clock", tag: "24-hour clock", q: (13 + i) + ":00", a: h }));
+[["3:10", "dziesięć po trzeciej", "trzecia dziesięć"], ["3:15", "kwadrans po trzeciej", "trzecia piętnaście"], ["3:30", "wpół do czwartej", "trzecia trzydzieści"], ["3:45", "za kwadrans czwarta", "trzecia czterdzieści pięć"], ["3:50", "za dziesięć czwarta", "trzecia pięćdziesiąt"], ["7 am", "siódma rano", "siódma"], ["3 pm", "trzecia po południu", "piętnasta"], ["8 pm", "ósma wieczorem", "dwudziesta"]]
+  .forEach(([t, s, f]) => add("pl", { topic: "clock", tag: "Spoken time", q: t, a: s, note: "formal: " + f }));
+add("pl", { topic: "clock", tag: "Question", q: "What time is it?", a: "Która (jest) godzina?" });
+
+const PL_MONTHS = [["January", "styczeń", "w styczniu"], ["February", "luty", "w lutym"], ["March", "marzec", "w marcu"], ["April", "kwiecień", "w kwietniu"], ["May", "maj", "w maju"], ["June", "czerwiec", "w czerwcu"], ["July", "lipiec", "w lipcu"], ["August", "sierpień", "w sierpniu"], ["September", "wrzesień", "we wrześniu"], ["October", "październik", "w październiku"], ["November", "listopad", "w listopadzie"], ["December", "grudzień", "w grudniu"]];
+PL_MONTHS.forEach(([en, m, inm]) => { add("pl", { topic: "months", tag: "Month", q: en, a: m }); add("pl", { topic: "months", tag: "Month", q: "in " + en, a: inm }); });
+
+/* ---------- Portuguese ---------- */
+const P5 = ["eu", "tu", "você / ele / ela", "nós", "vocês / eles / elas"];
+const PT_TENSES = { pres: "Presente", perf: "Pretérito perfeito", imperf: "Imperfeito", fut: "Futuro", cond: "Condicional", psubj: "Presente do subjuntivo", isubj: "Imperfeito do subjuntivo", fsubj: "Futuro do subjuntivo" };
+const FUT_E = ["ei", "ás", "á", "emos", "ão"], COND_E = ["ia", "ias", "ia", "íamos", "iam"];
+const PTV = [
+  ["falar", "to speak", "falar", "falo,falas,fala,falamos,falam|falei,falaste,falou,falamos,falaram|falava,falavas,falava,falávamos,falavam|fale,fales,fale,falemos,falem|falasse,falasses,falasse,falássemos,falassem|falar,falares,falar,falarmos,falarem"],
+  ["comer", "to eat", "comer", "como,comes,come,comemos,comem|comi,comeste,comeu,comemos,comeram|comia,comias,comia,comíamos,comiam|coma,comas,coma,comamos,comam|comesse,comesses,comesse,comêssemos,comessem|comer,comeres,comer,comermos,comerem"],
+  ["partir", "to leave, depart", "partir", "parto,partes,parte,partimos,partem|parti,partiste,partiu,partimos,partiram|partia,partias,partia,partíamos,partiam|parta,partas,parta,partamos,partam|partisse,partisses,partisse,partíssemos,partissem|partir,partires,partir,partirmos,partirem"],
+  ["ser", "to be (identity)", "ser", "sou,és,é,somos,são|fui,foste,foi,fomos,foram|era,eras,era,éramos,eram|seja,sejas,seja,sejamos,sejam|fosse,fosses,fosse,fôssemos,fossem|for,fores,for,formos,forem"],
+  ["estar", "to be (state, place)", "estar", "estou,estás,está,estamos,estão|estive,estiveste,esteve,estivemos,estiveram|estava,estavas,estava,estávamos,estavam|esteja,estejas,esteja,estejamos,estejam|estivesse,estivesses,estivesse,estivéssemos,estivessem|estiver,estiveres,estiver,estivermos,estiverem"],
+  ["ter", "to have", "ter", "tenho,tens,tem,temos,têm|tive,tiveste,teve,tivemos,tiveram|tinha,tinhas,tinha,tínhamos,tinham|tenha,tenhas,tenha,tenhamos,tenham|tivesse,tivesses,tivesse,tivéssemos,tivessem|tiver,tiveres,tiver,tivermos,tiverem"],
+  ["ir", "to go", "ir", "vou,vais,vai,vamos,vão|fui,foste,foi,fomos,foram|ia,ias,ia,íamos,iam|vá,vás,vá,vamos,vão|fosse,fosses,fosse,fôssemos,fossem|for,fores,for,formos,forem"],
+  ["fazer", "to do, to make", "far", "faço,fazes,faz,fazemos,fazem|fiz,fizeste,fez,fizemos,fizeram|fazia,fazias,fazia,fazíamos,faziam|faça,faças,faça,façamos,façam|fizesse,fizesses,fizesse,fizéssemos,fizessem|fizer,fizeres,fizer,fizermos,fizerem"],
+  ["poder", "can, to be able", "poder", "posso,podes,pode,podemos,podem|pude,pudeste,pôde,pudemos,puderam|podia,podias,podia,podíamos,podiam|possa,possas,possa,possamos,possam|pudesse,pudesses,pudesse,pudéssemos,pudessem|puder,puderes,puder,pudermos,puderem"],
+  ["querer", "to want", "querer", "quero,queres,quer,queremos,querem|quis,quiseste,quis,quisemos,quiseram|queria,querias,queria,queríamos,queriam|queira,queiras,queira,queiramos,queiram|quisesse,quisesses,quisesse,quiséssemos,quisessem|quiser,quiseres,quiser,quisermos,quiserem"],
+  ["dizer", "to say, to tell", "dir", "digo,dizes,diz,dizemos,dizem|disse,disseste,disse,dissemos,disseram|dizia,dizias,dizia,dizíamos,diziam|diga,digas,diga,digamos,digam|dissesse,dissesses,dissesse,disséssemos,dissessem|disser,disseres,disser,dissermos,disserem"],
+  ["ver", "to see", "ver", "vejo,vês,vê,vemos,veem|vi,viste,viu,vimos,viram|via,vias,via,víamos,viam|veja,vejas,veja,vejamos,vejam|visse,visses,visse,víssemos,vissem|vir,vires,vir,virmos,virem"],
+  ["vir", "to come", "vir", "venho,vens,vem,vimos,vêm|vim,vieste,veio,viemos,vieram|vinha,vinhas,vinha,vínhamos,vinham|venha,venhas,venha,venhamos,venham|viesse,viesses,viesse,viéssemos,viessem|vier,vieres,vier,viermos,vierem"],
+  ["saber", "to know (facts, how to)", "saber", "sei,sabes,sabe,sabemos,sabem|soube,soubeste,soube,soubemos,souberam|sabia,sabias,sabia,sabíamos,sabiam|saiba,saibas,saiba,saibamos,saibam|soubesse,soubesses,soubesse,soubéssemos,soubessem|souber,souberes,souber,soubermos,souberem"],
+  ["dar", "to give", "dar", "dou,dás,dá,damos,dão|dei,deste,deu,demos,deram|dava,davas,dava,dávamos,davam|dê,dês,dê,demos,deem|desse,desses,desse,déssemos,dessem|der,deres,der,dermos,derem"],
+  ["pôr", "to put", "por", "ponho,pões,põe,pomos,põem|pus,puseste,pôs,pusemos,puseram|punha,punhas,punha,púnhamos,punham|ponha,ponhas,ponha,ponhamos,ponham|pusesse,pusesses,pusesse,puséssemos,pusessem|puser,puseres,puser,pusermos,puserem"]
+];
+PTV.forEach(([inf, en, stem, data]) => {
+  const t = data.split("|").map(split);
+  const sets = { pres: t[0], perf: t[1], imperf: t[2], fut: FUT_E.map(e => stem + e), cond: COND_E.map(e => stem + e), psubj: t[3], isubj: t[4], fsubj: t[5] };
+  Object.entries(sets).forEach(([tense, forms]) => forms.forEach((a, i) => add("pt", { topic: "forms", tense, verb: inf, q: inf, person: P5[i], a, note: en })));
+});
+
+const PT_MEAN = [
+  ["to play", "jogar", "jogo", "joguei"], ["to train", "treinar", "treino", "treinei"], ["to kick, to shoot", "chutar", "chuto", "chutei"], ["to score, to mark", "marcar", "marco", "marquei"],
+  ["to pass", "passar", "passo", "passei"], ["to win", "ganhar", "ganho", "ganhei"], ["to draw (a match)", "empatar", "empato", "empatei"], ["to run", "correr", "corro", "corri"],
+  ["to beat", "vencer", "venço", "venci"], ["to lose", "perder", "perco", "perdi"], ["to defend", "defender", "defendo", "defendi"], ["to watch", "assistir (a)", "assisto", "assisti"],
+  ["to work", "trabalhar", "trabalho", "trabalhei"], ["to call, to switch on", "ligar", "ligo", "liguei"], ["to send", "mandar", "mando", "mandei"], ["to buy", "comprar", "compro", "comprei"],
+  ["to pay", "pagar", "pago", "paguei"], ["to need", "precisar (de)", "preciso", "precisei"], ["to start", "começar", "começo", "comecei"], ["to sell", "vender", "vendo", "vendi"],
+  ["to answer", "responder", "respondo", "respondi"], ["to receive", "receber", "recebo", "recebi"], ["to write", "escrever", "escrevo", "escrevi"], ["to decide", "decidir", "decido", "decidi"],
+  ["to discuss", "discutir", "discuto", "discuti"], ["to open", "abrir", "abro", "abri"], ["to live (reside)", "morar", "moro", "morei"], ["to like", "gostar (de)", "gosto", "gostei"],
+  ["to wake up", "acordar", "acordo", "acordei"], ["to have lunch", "almoçar", "almoço", "almocei"], ["to have dinner", "jantar", "janto", "jantei"], ["to arrive", "chegar", "chego", "cheguei"],
+  ["to wait, to hope", "esperar", "espero", "esperei"], ["to help", "ajudar", "ajudo", "ajudei"], ["to think, to find", "achar", "acho", "achei"], ["to drink", "beber", "bebo", "bebi"],
+  ["to learn", "aprender", "aprendo", "aprendi"], ["to understand", "entender", "entendo", "entendi"], ["to know (people, places)", "conhecer", "conheço", "conheci"], ["to live", "viver", "vivo", "vivi"],
+  ["to sleep", "dormir", "durmo", "dormi"], ["to go out", "sair", "saio", "saí"], ["to speak", "falar", "falo", "falei"], ["to eat", "comer", "como", "comi"], ["to leave, to depart", "partir", "parto", "parti"],
+  ["to be (identity)", "ser", "sou", "fui"], ["to be (state, place)", "estar", "estou", "estive"], ["to have", "ter", "tenho", "tive"], ["to go", "ir", "vou", "fui"],
+  ["to do, to make", "fazer", "faço", "fiz"], ["can, to be able", "poder", "posso", "pude"], ["to want", "querer", "quero", "quis"], ["to say, to tell", "dizer", "digo", "disse"],
+  ["to see", "ver", "vejo", "vi"], ["to come", "vir", "venho", "vim"], ["to know (facts)", "saber", "sei", "soube"], ["to give", "dar", "dou", "dei"], ["to put", "pôr", "ponho", "pus"]
+];
+PT_MEAN.forEach(([en, v, p, pf]) => add("pt", { topic: "meanings", tag: "Verb", q: en, a: v, note: "eu " + p + " · eu " + pf }));
+
+[["Monday", "segunda-feira", "na segunda"], ["Tuesday", "terça-feira", "na terça"], ["Wednesday", "quarta-feira", "na quarta"], ["Thursday", "quinta-feira", "na quinta"], ["Friday", "sexta-feira", "na sexta"], ["Saturday", "sábado", "no sábado"], ["Sunday", "domingo", "no domingo"], ["weekend", "fim de semana", "no fim de semana"]]
+  .forEach(([en, w, on]) => { add("pt", { topic: "days", tag: "Day", q: en, a: w, note: "on " + en + ": " + on }); add("pt", { topic: "days", tag: "Day", q: "on " + en, a: on }); });
+[["morning", "manhã", "in the morning", "de manhã"], ["noon", "meio-dia", "at noon", "ao meio-dia"], ["afternoon", "tarde", "in the afternoon", "à tarde"], ["evening, night", "noite", "in the evening, at night", "à noite"], ["early hours (after midnight)", "madrugada", "in the early hours", "de madrugada"], ["midnight", "meia-noite", "at midnight", "à meia-noite"], ["today", "hoje"], ["tomorrow", "amanhã"], ["yesterday", "ontem"], ["this morning", "hoje de manhã"], ["tonight", "hoje à noite"], ["good morning", "bom dia"], ["good afternoon", "boa tarde"], ["good evening, good night", "boa noite"]]
+  .forEach(([en, w, en2, w2]) => { add("pt", { topic: "daytimes", tag: "Time of day", q: en, a: w }); if (en2) add("pt", { topic: "daytimes", tag: "Time of day", q: en2, a: w2 }); });
+["uma", "duas", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez", "onze"].forEach((h, i) => {
+  add("pt", { topic: "clock", tag: "What time is it?", q: "It's " + (i + 1) + ":00", a: i === 0 ? "é uma (hora)" : "são " + h });
+  add("pt", { topic: "clock", tag: "At what time?", q: "at " + (i + 1) + ":00", a: i === 0 ? "à uma" : "às " + h });
+});
+add("pt", { topic: "clock", tag: "What time is it?", q: "It's 12:00 noon", a: "é meio-dia" });
+add("pt", { topic: "clock", tag: "At what time?", q: "at midnight", a: "à meia-noite" });
+[["3:10", "três e dez"], ["3:15", "três e quinze"], ["3:30", "três e meia"], ["3:45", "quinze para as quatro"], ["3:50", "dez para as quatro"], ["12:30", "meio-dia e meia"], ["7 am", "sete da manhã"], ["3 pm", "três da tarde"], ["8 pm", "oito da noite"], ["15:00 (24-hour)", "quinze horas (15h)"]]
+  .forEach(([t, a]) => add("pt", { topic: "clock", tag: "Spoken time", q: t, a }));
+add("pt", { topic: "clock", tag: "Question", q: "What time is it?", a: "Que horas são?" });
+["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"].forEach((m, i) => {
+  const en = PL_MONTHS[i][0];
+  add("pt", { topic: "months", tag: "Month", q: en, a: m, note: "in " + en + ": em " + m });
+});
+
+/* ---------- topics ---------- */
+const TOPICS = {
+  pl: [["forms", "Verb forms"], ["meanings", "Verb meanings"], ["aspect", "Aspect pairs"], ["days", "Days"], ["daytimes", "Times of day"], ["clock", "Clock time"], ["months", "Months"]],
+  pt: [["forms", "Verb forms"], ["meanings", "Verb meanings"], ["days", "Days"], ["daytimes", "Times of day"], ["clock", "Clock time"], ["months", "Months"]]
+};
+const TENSES = { pl: PL_TENSES, pt: PT_TENSES };
+const LANG_LINE = { pl: "Polish verbs, days and time", pt: "Brazilian Portuguese verbs, days and time" };
+
+/* ---------- state ---------- */
+const KEY = "revision-cards:v1";
+const defaults = () => ({ lang: "pl", mode: "flash", topics: { pl: ["forms", "meanings"], pt: ["forms", "meanings"] }, tenses: { pl: Object.keys(PL_TENSES), pt: Object.keys(PT_TENSES) }, known: {}, includeKnown: false, best: {}, qlen: 10 });
+let S = defaults();
+try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(defaults(), JSON.parse(raw)); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+function pool() {
+  const tp = S.topics[S.lang], tn = S.tenses[S.lang];
+  return CARDS[S.lang].filter(c => tp.includes(c.topic) && (c.topic !== "forms" || tn.includes(c.tense)));
+}
+function tagFor(c) {
+  if (c.topic === "forms") return TENSES[c.lang][c.tense];
+  return c.tag;
+}
+
+/* ---------- chrome ---------- */
+function renderChrome() {
+  document.body.dataset.lang = S.lang;
+  document.documentElement.lang = S.lang === "pl" ? "pl" : "pt-BR";
+  document.getElementById("langLine").textContent = LANG_LINE[S.lang];
+  document.querySelectorAll("[data-lang]").forEach(b => { if (b.tagName === "BUTTON") b.setAttribute("aria-selected", b.dataset.lang === S.lang); });
+  document.querySelectorAll("[data-mode]").forEach(b => b.setAttribute("aria-selected", b.dataset.mode === S.mode));
+  const counts = {};
+  CARDS[S.lang].forEach(c => counts[c.topic] = (counts[c.topic] || 0) + 1);
+  document.getElementById("topicChips").innerHTML = TOPICS[S.lang].map(([k, label]) =>
+    `<button class="chip" data-topic="${k}" aria-pressed="${S.topics[S.lang].includes(k)}">${label}<span class="n">${counts[k] || 0}</span></button>`).join("");
+  document.getElementById("tenseChips").innerHTML = Object.entries(TENSES[S.lang]).map(([k, label]) =>
+    `<button class="chip" data-tense="${k}" aria-pressed="${S.tenses[S.lang].includes(k)}">${label}</button>`).join("");
+  document.getElementById("tenseGroup").style.display = S.topics[S.lang].includes("forms") ? "" : "none";
+  const names = TOPICS[S.lang].filter(([k]) => S.topics[S.lang].includes(k)).map(t => t[1]);
+  document.getElementById("filterSum").textContent = names.length ? names.join(", ") : "Nothing picked";
+}
+
+document.querySelector(".seg").addEventListener("click", e => {
+  const b = e.target.closest("button[data-lang]"); if (!b || b.dataset.lang === S.lang) return;
+  S.lang = b.dataset.lang; save(); renderChrome(); startMode();
+});
+document.querySelector(".modes").addEventListener("click", e => {
+  const b = e.target.closest("button[data-mode]"); if (!b || b.dataset.mode === S.mode) return;
+  S.mode = b.dataset.mode; save(); renderChrome(); startMode();
+});
+document.getElementById("filters").addEventListener("click", e => {
+  const t = e.target.closest("[data-topic]"), n = e.target.closest("[data-tense]");
+  if (t) { const a = S.topics[S.lang], k = t.dataset.topic; S.topics[S.lang] = a.includes(k) ? a.filter(x => x !== k) : a.concat(k); }
+  else if (n) { const a = S.tenses[S.lang], k = n.dataset.tense; S.tenses[S.lang] = a.includes(k) ? a.filter(x => x !== k) : a.concat(k); }
+  else return;
+  save(); renderChrome(); startMode();
+});
+
+const view = document.getElementById("view");
+function startMode() { S.mode === "flash" ? newRound() : quizSetup(); }
+
+/* ---------- flashcards ---------- */
+let queue = [], flipped = false;
+function newRound() {
+  queue = shuffle(pool().filter(c => S.includeKnown || !S.known[c.id]));
+  flipped = false; renderFlash();
+}
+function renderFlash() {
+  const all = pool(), knownCount = all.filter(c => S.known[c.id]).length;
+  const tools = `<div class="tools">
+      <button class="link" id="shuffle">Shuffle a new round</button>
+      <label><input type="checkbox" id="incKnown" ${S.includeKnown ? "checked" : ""}> Include known cards</label>
+      <button class="link" id="resetKnown">Reset known</button>
+    </div>`;
+  if (!all.length) {
+    view.innerHTML = `<div class="paper empty"><div class="tag"></div><div class="face-body"><div class="q" style="font-size:1.6rem">Pick a topic to start</div><p class="small">Open “What to practise” above and choose at least one topic${S.topics[S.lang].includes("forms") ? " and tense" : ""}.</p></div></div>`;
+    return;
+  }
+  if (!queue.length) {
+    view.innerHTML = `<div class="paper empty"><div class="tag"><span>Round complete</span></div><div class="face-body">
+      <div class="q" style="font-size:1.7rem">${knownCount === all.length ? "Every card here is marked known." : "That's the round done."}</div>
+      <p class="small">${knownCount} of ${all.length} cards known in these topics.</p></div></div>
+      <div class="stack"><button class="btn primary" id="again-round">Start a new round</button></div>${tools}`;
+    document.getElementById("again-round").onclick = () => { if (knownCount === all.length) { S.includeKnown = true; save(); } newRound(); };
+    bindTools(); return;
+  }
+  const c = queue[0];
+  const person = c.person ? `<div class="person">${esc(c.person)}</div>` : "";
+  view.innerHTML = `
+    <div class="meta"><span>${queue.length} left this round</span><span>${knownCount} of ${all.length} known</span></div>
+    <div class="card ${flipped ? "flipped" : ""}" id="card" role="button" tabindex="0" aria-label="Flashcard. ${flipped ? "Showing answer" : "Tap to show answer"}">
+      <div class="inner">
+        <div class="face front paper"><div class="tag"><b>${esc(tagFor(c))}</b></div>
+          <div class="face-body"><div class="q">${esc(c.q)}</div>${person}</div></div>
+        <div class="face back paper"><div class="tag"><b>${esc(tagFor(c))}</b></div>
+          <div class="face-body"><div class="recap">${esc(c.q)}${c.person ? ", " + esc(c.person) : ""}</div><div class="a">${esc(c.a)}</div>${c.note ? `<div class="note">${esc(c.note)}</div>` : ""}</div></div>
+      </div>
+    </div>
+    <p class="hint">${flipped ? "Did you get it?" : "Say it out loud, then tap the card"}</p>
+    <div class="actions"><button class="btn" id="again">Again</button><button class="btn primary" id="got">Got it</button></div>
+    ${tools}`;
+  const card = document.getElementById("card");
+  card.onclick = flip;
+  card.onkeydown = e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); flip(); } };
+  document.getElementById("again").onclick = again;
+  document.getElementById("got").onclick = got;
+  bindTools();
+}
+function flip() { flipped = !flipped; const card = document.getElementById("card"); card.classList.toggle("flipped", flipped); document.querySelector(".hint").textContent = flipped ? "Did you get it?" : "Say it out loud, then tap the card"; }
+function got() { const c = queue.shift(); S.known[c.id] = true; save(); flipped = false; renderFlash(); }
+function again() { const c = queue.shift(); queue.splice(Math.min(4, queue.length), 0, c); flipped = false; renderFlash(); }
+function bindTools() {
+  const s = document.getElementById("shuffle"); if (s) s.onclick = newRound;
+  const i = document.getElementById("incKnown"); if (i) i.onchange = () => { S.includeKnown = i.checked; save(); newRound(); };
+  const r = document.getElementById("resetKnown"); if (r) r.onclick = () => {
+    if (!confirm("Clear every card you've marked as known in these topics?")) return;
+    pool().forEach(c => delete S.known[c.id]); save(); newRound();
+  };
+}
+
+/* ---------- quiz ---------- */
+let Q = null;
+function quizSetup() {
+  const n = pool().length, best = S.best[S.lang];
+  if (!n) {
+    view.innerHTML = `<div class="paper empty"><div class="tag"></div><div class="face-body"><div class="q" style="font-size:1.6rem">Pick a topic to start</div><p class="small">Open “What to practise” above and choose at least one topic.</p></div></div>`;
+    return;
+  }
+  view.innerHTML = `<div class="setup"><div class="paper"><div class="tag"><b>Quiz</b></div>
+      <div class="face-body"><div class="q" style="font-size:1.7rem">Four options, one right answer.</div>
+      <p class="small">Questions come from ${n} cards in your chosen topics. Word cards are asked in both directions.</p>
+      <div class="len" role="group" aria-label="Number of questions">${[10, 20, 30].map(k => `<button class="chip" data-len="${k}" aria-pressed="${S.qlen === k}">${k}</button>`).join("")}</div>
+      ${best ? `<p class="small">Best so far: ${best.score} out of ${best.total}</p>` : ""}
+      </div></div>
+      <div class="stack"><button class="btn primary" id="startQuiz">Start quiz</button></div></div>`;
+  view.querySelector(".len").onclick = e => { const b = e.target.closest("[data-len]"); if (!b) return; S.qlen = +b.dataset.len; save(); quizSetup(); };
+  document.getElementById("startQuiz").onclick = startQuiz;
+}
+function uniq(arr, exclude) { const seen = new Set([exclude]); return arr.filter(x => !seen.has(x) && seen.add(x)); }
+function buildQuestion(c) {
+  const all = CARDS[c.lang];
+  if (c.topic === "forms") {
+    const same = all.filter(x => x.topic === "forms" && x.verb === c.verb);
+    const sameT = uniq(shuffle(same.filter(x => x.tense === c.tense)).map(x => x.a), c.a).slice(0, 2);
+    const other = uniq(shuffle(same).map(x => x.a), c.a).filter(a => !sameT.includes(a));
+    const opts = shuffle([c.a, ...sameT, ...other.slice(0, 3 - sameT.length)]);
+    return { tag: tagFor(c), q: c.q, person: c.person, answer: c.a, options: opts, note: c.note };
+  }
+  const peers = all.filter(x => x.topic === c.topic && x.id !== c.id);
+  const reverse = c.topic !== "aspect" && Math.random() < 0.5;
+  if (reverse) {
+    const d = uniq(shuffle(peers).map(x => x.q), c.q).slice(0, 3);
+    return { tag: tagFor(c) + " · in English", q: c.a, answer: c.q, options: shuffle([c.q, ...d]), note: c.note };
+  }
+  const d = uniq(shuffle(peers).map(x => x.a), c.a).slice(0, 3);
+  return { tag: tagFor(c), q: c.q, person: c.person, answer: c.a, options: shuffle([c.a, ...d]), note: c.note };
+}
+function startQuiz() {
+  const qs = sample(pool(), S.qlen).map(buildQuestion);
+  Q = { qs, i: 0, score: 0, misses: [], answered: false };
+  renderQuestion();
+}
+function renderQuestion() {
+  const q = Q.qs[Q.i], total = Q.qs.length;
+  view.innerHTML = `
+    <div class="progress"><span style="width:${(Q.i / total) * 100}%"></span></div>
+    <div class="meta"><span>Question ${Q.i + 1} of ${total}</span><span>${Q.score} correct</span></div>
+    <div class="paper qcard"><div class="tag"><b>${esc(q.tag)}</b></div>
+      <div class="face-body"><div class="q">${esc(q.q)}</div>${q.person ? `<div class="person">${esc(q.person)}</div>` : ""}</div></div>
+    <div class="options">${q.options.map((o, k) => `<button class="opt" data-k="${k}">${esc(o)}</button>`).join("")}</div>
+    <div class="feedback" id="fb"></div>
+    <div class="stack"><button class="btn primary" id="next" hidden>${Q.i + 1 === total ? "See results" : "Next question"}</button></div>`;
+  view.querySelector(".options").onclick = e => { const b = e.target.closest(".opt"); if (b) answer(+b.dataset.k); };
+  document.getElementById("next").onclick = next;
+}
+function answer(k) {
+  if (Q.answered) return; Q.answered = true;
+  const q = Q.qs[Q.i], chosen = q.options[k], ok = chosen === q.answer;
+  view.querySelectorAll(".opt").forEach((b, j) => {
+    b.disabled = true;
+    if (q.options[j] === q.answer) b.classList.add("right");
+    else if (j === k) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  const fb = document.getElementById("fb");
+  if (ok) { Q.score++; fb.className = "feedback good"; fb.textContent = "Correct" + (q.note ? " — " + q.note : ""); }
+  else { Q.misses.push(q); fb.className = "feedback bad"; fb.textContent = "Answer: " + q.answer + (q.note ? " (" + q.note + ")" : ""); }
+  view.querySelector(".meta span:last-child").textContent = Q.score + " correct";
+  const n = document.getElementById("next"); n.hidden = false; n.focus();
+}
+function next() {
+  Q.i++; Q.answered = false;
+  if (Q.i < Q.qs.length) return renderQuestion();
+  const total = Q.qs.length, prev = S.best[S.lang];
+  const isBest = !prev || Q.score / total > prev.score / prev.total;
+  if (isBest) { S.best[S.lang] = { score: Q.score, total }; save(); }
+  view.innerHTML = `<div class="end"><div class="paper"><div class="tag"><b>Results</b>${isBest ? "<span>New best</span>" : ""}</div>
+      <div class="face-body"><div class="big">${Q.score} out of ${total}</div>
+      <p class="small">${Q.misses.length ? "Worth another look:" : "Clean sheet. Try a longer quiz or add a topic."}</p></div></div>
+      ${Q.misses.length ? `<ul class="misses">${Q.misses.map(m => `<li><span class="mq">${esc(m.q)}${m.person ? ", " + esc(m.person) : ""}</span><br><span class="ma">${esc(m.answer)}</span></li>`).join("")}</ul>` : ""}
+      <div class="stack"><button class="btn primary" id="retry">Start another quiz</button><button class="btn" id="setup">Change length</button></div></div>`;
+  document.getElementById("retry").onclick = startQuiz;
+  document.getElementById("setup").onclick = quizSetup;
+}
+
+/* ---------- keyboard ---------- */
+document.addEventListener("keydown", e => {
+  if (e.target.closest && e.target.closest("details")) return;
+  if (S.mode === "flash" && queue.length) {
+    if (e.key === "ArrowRight") got();
+    else if (e.key === "ArrowLeft") again();
+  } else if (S.mode === "quiz" && Q && view.querySelector(".opt")) {
+    if (/^[1-4]$/.test(e.key) && !Q.answered) answer(+e.key - 1);
+  }
+});
+
+renderChrome();
+startMode();
+
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>
