@@ -56,7 +56,7 @@ button{font:inherit;color:inherit}
 .seg button{border:0;background:transparent;padding:7px 13px;border-radius:999px;cursor:pointer;font-weight:600;font-size:.9rem;color:var(--muted)}
 .seg button[aria-selected="true"]{background:var(--accent);color:var(--on-accent)}
 
-.modes{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--line);margin-bottom:12px}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid var(--line);margin-bottom:12px}
 .modes button{border:0;background:none;padding:10px 0 11px;font-weight:600;font-size:1rem;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
 .modes button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
 
@@ -133,6 +133,33 @@ details.filters[open] summary::after{transform:rotate(225deg);margin-top:9px}
 .empty{text-align:left}
 .stack{display:grid;gap:10px;margin-top:16px}
 
+/* Reference tables */
+.refnav{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 10px;margin:0 -2px;scrollbar-width:none}
+.refnav::-webkit-scrollbar{display:none}
+.refnav .chip{white-space:nowrap;flex:none}
+.ref h2{font-size:1.25rem;font-weight:800;margin:14px 0 4px;letter-spacing:-.01em}
+.ref h3{font-size:1rem;font-weight:600;margin:18px 0 6px}
+.ref p{margin:6px 0;color:var(--muted);font-size:.95rem;max-width:62ch}
+.ref p strong{color:var(--ink)}
+.picker{display:flex;align-items:center;gap:10px;margin:6px 0 4px}
+.picker label{font-weight:600;font-size:.9rem;color:var(--muted)}
+.picker select{flex:1;font:inherit;font-size:1rem;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin:8px 0 16px;-webkit-overflow-scrolling:touch}
+.tablewrap table{border-collapse:collapse;width:100%;font-size:.93rem}
+.tablewrap th,.tablewrap td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+.tablewrap tr:last-child th,.tablewrap tr:last-child td{border-bottom:0}
+.tablewrap thead th{font-weight:600;color:var(--muted);font-size:.8rem;background:var(--bg)}
+.tablewrap tbody th{position:sticky;left:0;background:var(--surface);font-weight:600;z-index:1}
+.tablewrap td{font-family:var(--serif)}
+.tablewrap tr.f th,.tablewrap tr.f td{background:var(--bg)}
+.tablewrap.wrap td,.tablewrap.wrap th{white-space:normal;min-width:7em}
+.verbhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:12px}
+.verbhead .inf{font-family:var(--serif);font-weight:600;font-size:1.9rem;color:var(--accent)}
+.verbhead .en{color:var(--muted)}
+.extra{font-size:.92rem;color:var(--muted);margin:-6px 0 14px}
+.legend{font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:8px;margin:2px 0 0}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:3px;background:var(--bg);border:1px solid var(--line)}
+
 @media (prefers-reduced-motion: reduce){
   .inner{transition:none}
   .progress span{transition:none}
@@ -155,6 +182,7 @@ details.filters[open] summary::after{transform:rotate(225deg);margin-top:9px}
   <div class="modes" role="tablist" aria-label="Mode">
     <button role="tab" data-mode="flash">Flashcards</button>
     <button role="tab" data-mode="quiz">Quiz</button>
+    <button role="tab" data-mode="ref">Tables</button>
   </div>
 
   <details class="filters" id="filters">
@@ -174,6 +202,7 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "
 const sample = (a, n) => shuffle(a).slice(0, n);
 
 const CARDS = { pl: [], pt: [] };
+const TABLES = { pl: [], pt: [] };
 function add(lang, c) { c.lang = lang; c.id = lang + ":" + c.topic + ":" + CARDS[lang].length; CARDS[lang].push(c); }
 
 /* ---------- Polish ---------- */
@@ -208,6 +237,12 @@ PLV.forEach(v => {
   if (v.fut) f("futp", v.pf || v.inf, P6, split(v.fut));
   f("cond", v.inf, P13, plCond(l));
   if (v.imp) f("imp", v.inf, ["ty", "my", "wy"], split(v.imp));
+  const pres = split(v.pres), cols = [["Present", P13.map((_, i) => pres[AUX[i]])], ["Past", plPast(l, v.lm)]];
+  if (v.comp) cols.push(["Future with będę", plComp(l)]);
+  if (v.fut) { const fu = split(v.fut); cols.push([v.pf ? "Simple future (" + v.pf + ")" : "Future", P13.map((_, i) => fu[AUX[i]])]); }
+  cols.push(["Conditional", plCond(l)]);
+  const extra = [v.imp ? "Imperative: " + split(v.imp).join(", ") : "", v.pf ? "Perfective partner: " + v.pf : ""].filter(Boolean).join(". ");
+  TABLES.pl.push({ verb: v.inf, en: v.en, groups: [{ title: "", rows: P13, cols }], extra });
 });
 
 const PL_MEAN = [
@@ -242,9 +277,10 @@ PL_TOD.forEach(([en, w, en2, w2]) => { add("pl", { topic: "daytimes", tag: "Time
 const PL_HOURS = ["pierwsza", "druga", "trzecia", "czwarta", "piąta", "szósta", "siódma", "ósma", "dziewiąta", "dziesiąta", "jedenasta", "dwunasta"];
 const PL_AT = ["o pierwszej", "o drugiej", "o trzeciej", "o czwartej", "o piątej", "o szóstej", "o siódmej", "o ósmej", "o dziewiątej", "o dziesiątej", "o jedenastej", "o dwunastej"];
 PL_HOURS.forEach((h, i) => { add("pl", { topic: "clock", tag: "What time is it?", q: "It's " + (i + 1) + ":00", a: "jest " + h }); add("pl", { topic: "clock", tag: "At what time?", q: "at " + (i + 1) + ":00", a: PL_AT[i] }); });
-["trzynasta", "czternasta", "piętnasta", "szesnasta", "siedemnasta", "osiemnasta", "dziewiętnasta", "dwudziesta", "dwudziesta pierwsza", "dwudziesta druga", "dwudziesta trzecia"].forEach((h, i) => add("pl", { topic: "clock", tag: "24-hour clock", q: (13 + i) + ":00", a: h }));
-[["3:10", "dziesięć po trzeciej", "trzecia dziesięć"], ["3:15", "kwadrans po trzeciej", "trzecia piętnaście"], ["3:30", "wpół do czwartej", "trzecia trzydzieści"], ["3:45", "za kwadrans czwarta", "trzecia czterdzieści pięć"], ["3:50", "za dziesięć czwarta", "trzecia pięćdziesiąt"], ["7 am", "siódma rano", "siódma"], ["3 pm", "trzecia po południu", "piętnasta"], ["8 pm", "ósma wieczorem", "dwudziesta"]]
-  .forEach(([t, s, f]) => add("pl", { topic: "clock", tag: "Spoken time", q: t, a: s, note: "formal: " + f }));
+const PL_24 = ["trzynasta", "czternasta", "piętnasta", "szesnasta", "siedemnasta", "osiemnasta", "dziewiętnasta", "dwudziesta", "dwudziesta pierwsza", "dwudziesta druga", "dwudziesta trzecia"];
+PL_24.forEach((h, i) => add("pl", { topic: "clock", tag: "24-hour clock", q: (13 + i) + ":00", a: h }));
+const PL_MIN = [["3:10", "dziesięć po trzeciej", "trzecia dziesięć"], ["3:15", "kwadrans po trzeciej", "trzecia piętnaście"], ["3:30", "wpół do czwartej", "trzecia trzydzieści"], ["3:45", "za kwadrans czwarta", "trzecia czterdzieści pięć"], ["3:50", "za dziesięć czwarta", "trzecia pięćdziesiąt"], ["7 am", "siódma rano", "siódma"], ["3 pm", "trzecia po południu", "piętnasta"], ["8 pm", "ósma wieczorem", "dwudziesta"]];
+PL_MIN.forEach(([t, s, f]) => add("pl", { topic: "clock", tag: "Spoken time", q: t, a: s, note: "formal: " + f }));
 add("pl", { topic: "clock", tag: "Question", q: "What time is it?", a: "Która (jest) godzina?" });
 
 const PL_MONTHS = [["January", "styczeń", "w styczniu"], ["February", "luty", "w lutym"], ["March", "marzec", "w marcu"], ["April", "kwiecień", "w kwietniu"], ["May", "maj", "w maju"], ["June", "czerwiec", "w czerwcu"], ["July", "lipiec", "w lipcu"], ["August", "sierpień", "w sierpniu"], ["September", "wrzesień", "we wrześniu"], ["October", "październik", "w październiku"], ["November", "listopad", "w listopadzie"], ["December", "grudzień", "w grudniu"]];
@@ -254,6 +290,7 @@ PL_MONTHS.forEach(([en, m, inm]) => { add("pl", { topic: "months", tag: "Month",
 const P5 = ["eu", "tu", "você / ele / ela", "nós", "vocês / eles / elas"];
 const PT_TENSES = { pres: "Presente", perf: "Pretérito perfeito", imperf: "Imperfeito", fut: "Futuro", cond: "Condicional", psubj: "Presente do subjuntivo", isubj: "Imperfeito do subjuntivo", fsubj: "Futuro do subjuntivo" };
 const FUT_E = ["ei", "ás", "á", "emos", "ão"], COND_E = ["ia", "ias", "ia", "íamos", "iam"];
+const PT_EXTRA = { falar: ["falado", "falando"], comer: ["comido", "comendo"], partir: ["partido", "partindo"], ser: ["sido", "sendo"], estar: ["estado", "estando"], ter: ["tido", "tendo"], ir: ["ido", "indo"], fazer: ["feito", "fazendo"], poder: ["podido", "podendo"], querer: ["querido", "querendo"], dizer: ["dito", "dizendo"], ver: ["visto", "vendo"], vir: ["vindo", "vindo"], saber: ["sabido", "sabendo"], dar: ["dado", "dando"], "pôr": ["posto", "pondo"] };
 const PTV = [
   ["falar", "to speak", "falar", "falo,falas,fala,falamos,falam|falei,falaste,falou,falamos,falaram|falava,falavas,falava,falávamos,falavam|fale,fales,fale,falemos,falem|falasse,falasses,falasse,falássemos,falassem|falar,falares,falar,falarmos,falarem"],
   ["comer", "to eat", "comer", "como,comes,come,comemos,comem|comi,comeste,comeu,comemos,comeram|comia,comias,comia,comíamos,comiam|coma,comas,coma,comamos,comam|comesse,comesses,comesse,comêssemos,comessem|comer,comeres,comer,comermos,comerem"],
@@ -276,6 +313,10 @@ PTV.forEach(([inf, en, stem, data]) => {
   const t = data.split("|").map(split);
   const sets = { pres: t[0], perf: t[1], imperf: t[2], fut: FUT_E.map(e => stem + e), cond: COND_E.map(e => stem + e), psubj: t[3], isubj: t[4], fsubj: t[5] };
   Object.entries(sets).forEach(([tense, forms]) => forms.forEach((a, i) => add("pt", { topic: "forms", tense, verb: inf, q: inf, person: P5[i], a, note: en })));
+  TABLES.pt.push({ verb: inf, en, groups: [
+    { title: "Indicative", rows: P5, cols: [["Presente", sets.pres], ["Pretérito perfeito", sets.perf], ["Imperfeito", sets.imperf], ["Futuro", sets.fut], ["Condicional", sets.cond]] },
+    { title: "Subjunctive", rows: P5, cols: [["Presente", sets.psubj], ["Imperfeito", sets.isubj], ["Futuro", sets.fsubj]] }
+  ], extra: "Participle: " + PT_EXTRA[inf][0] + ". Gerund: " + PT_EXTRA[inf][1] + "." });
 });
 
 const PT_MEAN = [
@@ -296,20 +337,22 @@ const PT_MEAN = [
 ];
 PT_MEAN.forEach(([en, v, p, pf]) => add("pt", { topic: "meanings", tag: "Verb", q: en, a: v, note: "eu " + p + " · eu " + pf }));
 
-[["Monday", "segunda-feira", "na segunda"], ["Tuesday", "terça-feira", "na terça"], ["Wednesday", "quarta-feira", "na quarta"], ["Thursday", "quinta-feira", "na quinta"], ["Friday", "sexta-feira", "na sexta"], ["Saturday", "sábado", "no sábado"], ["Sunday", "domingo", "no domingo"], ["weekend", "fim de semana", "no fim de semana"]]
-  .forEach(([en, w, on]) => { add("pt", { topic: "days", tag: "Day", q: en, a: w, note: "on " + en + ": " + on }); add("pt", { topic: "days", tag: "Day", q: "on " + en, a: on }); });
-[["morning", "manhã", "in the morning", "de manhã"], ["noon", "meio-dia", "at noon", "ao meio-dia"], ["afternoon", "tarde", "in the afternoon", "à tarde"], ["evening, night", "noite", "in the evening, at night", "à noite"], ["early hours (after midnight)", "madrugada", "in the early hours", "de madrugada"], ["midnight", "meia-noite", "at midnight", "à meia-noite"], ["today", "hoje"], ["tomorrow", "amanhã"], ["yesterday", "ontem"], ["this morning", "hoje de manhã"], ["tonight", "hoje à noite"], ["good morning", "bom dia"], ["good afternoon", "boa tarde"], ["good evening, good night", "boa noite"]]
-  .forEach(([en, w, en2, w2]) => { add("pt", { topic: "daytimes", tag: "Time of day", q: en, a: w }); if (en2) add("pt", { topic: "daytimes", tag: "Time of day", q: en2, a: w2 }); });
-["uma", "duas", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez", "onze"].forEach((h, i) => {
+const PT_DAYS = [["Monday", "segunda-feira", "na segunda"], ["Tuesday", "terça-feira", "na terça"], ["Wednesday", "quarta-feira", "na quarta"], ["Thursday", "quinta-feira", "na quinta"], ["Friday", "sexta-feira", "na sexta"], ["Saturday", "sábado", "no sábado"], ["Sunday", "domingo", "no domingo"], ["weekend", "fim de semana", "no fim de semana"]];
+PT_DAYS.forEach(([en, w, on]) => { add("pt", { topic: "days", tag: "Day", q: en, a: w, note: "on " + en + ": " + on }); add("pt", { topic: "days", tag: "Day", q: "on " + en, a: on }); });
+const PT_TOD = [["morning", "manhã", "in the morning", "de manhã"], ["noon", "meio-dia", "at noon", "ao meio-dia"], ["afternoon", "tarde", "in the afternoon", "à tarde"], ["evening, night", "noite", "in the evening, at night", "à noite"], ["early hours (after midnight)", "madrugada", "in the early hours", "de madrugada"], ["midnight", "meia-noite", "at midnight", "à meia-noite"], ["today", "hoje"], ["tomorrow", "amanhã"], ["yesterday", "ontem"], ["this morning", "hoje de manhã"], ["tonight", "hoje à noite"], ["good morning", "bom dia"], ["good afternoon", "boa tarde"], ["good evening, good night", "boa noite"]];
+PT_TOD.forEach(([en, w, en2, w2]) => { add("pt", { topic: "daytimes", tag: "Time of day", q: en, a: w }); if (en2) add("pt", { topic: "daytimes", tag: "Time of day", q: en2, a: w2 }); });
+const PT_HOURS = ["uma", "duas", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez", "onze"];
+PT_HOURS.forEach((h, i) => {
   add("pt", { topic: "clock", tag: "What time is it?", q: "It's " + (i + 1) + ":00", a: i === 0 ? "é uma (hora)" : "são " + h });
   add("pt", { topic: "clock", tag: "At what time?", q: "at " + (i + 1) + ":00", a: i === 0 ? "à uma" : "às " + h });
 });
 add("pt", { topic: "clock", tag: "What time is it?", q: "It's 12:00 noon", a: "é meio-dia" });
 add("pt", { topic: "clock", tag: "At what time?", q: "at midnight", a: "à meia-noite" });
-[["3:10", "três e dez"], ["3:15", "três e quinze"], ["3:30", "três e meia"], ["3:45", "quinze para as quatro"], ["3:50", "dez para as quatro"], ["12:30", "meio-dia e meia"], ["7 am", "sete da manhã"], ["3 pm", "três da tarde"], ["8 pm", "oito da noite"], ["15:00 (24-hour)", "quinze horas (15h)"]]
-  .forEach(([t, a]) => add("pt", { topic: "clock", tag: "Spoken time", q: t, a }));
+const PT_MIN = [["3:10", "três e dez"], ["3:15", "três e quinze"], ["3:30", "três e meia"], ["3:45", "quinze para as quatro"], ["3:50", "dez para as quatro"], ["12:30", "meio-dia e meia"], ["7 am", "sete da manhã"], ["3 pm", "três da tarde"], ["8 pm", "oito da noite"], ["15:00 (24-hour)", "quinze horas (15h)"]];
+PT_MIN.forEach(([t, a]) => add("pt", { topic: "clock", tag: "Spoken time", q: t, a }));
 add("pt", { topic: "clock", tag: "Question", q: "What time is it?", a: "Que horas são?" });
-["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"].forEach((m, i) => {
+const PT_MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+PT_MONTHS.forEach((m, i) => {
   const en = PL_MONTHS[i][0];
   add("pt", { topic: "months", tag: "Month", q: en, a: m, note: "in " + en + ": em " + m });
 });
@@ -322,9 +365,51 @@ const TOPICS = {
 const TENSES = { pl: PL_TENSES, pt: PT_TENSES };
 const LANG_LINE = { pl: "Polish verbs, days and time", pt: "Brazilian Portuguese verbs, days and time" };
 
+/* ---------- reference tables ---------- */
+const REF_SECTIONS = [["verbs", "Verb tables"], ["list", "Verb list"], ["days", "Days"], ["daytimes", "Times of day"], ["clock", "Clock time"], ["months", "Months"], ["notes", "Grammar notes"]];
+const REF = {
+  pl: {
+    list: [{ head: ["English", "Imperfective / perfective", "ja (present)"], rows: PL_MEAN }],
+    days: [{ head: ["English", "Polish", "on …"], rows: PL_DAYS, intro: "Days and months aren't capitalised. Example: Dziś jest piątek, drugi października." }],
+    daytimes: [{ head: ["English", "Polish", "in / at the …"], rows: PL_TOD.map(r => [r[0], r[1], r[3] || ""]) }],
+    clock: [
+      { title: "Hours", intro: "Polish uses feminine ordinals: “the third (hour)”. Która (jest) godzina? = What time is it?", head: ["Hour", "It's …", "At …"], rows: PL_HOURS.map((h, i) => [String(i + 1), "jest " + h, PL_AT[i]]) },
+      { title: "24-hour clock", head: ["Time", "Polish"], rows: PL_24.map((h, i) => [(13 + i) + ":00", h]) },
+      { title: "Minutes", intro: "Half-hours look forward: wpół do czwartej (“half to four”) is 3:30.", head: ["Time", "Spoken", "Formal / 24h"], rows: PL_MIN }
+    ],
+    months: [{ head: ["English", "Polish", "in …"], rows: PL_MONTHS, intro: "Dates put the month in the genitive: 2 października (drugiego października = on the 2nd of October)." }]
+  },
+  pt: {
+    list: [{ head: ["English", "Verb", "eu (presente)", "eu (perfeito)"], rows: PT_MEAN }],
+    days: [{ head: ["English", "Portuguese", "on …"], rows: PT_DAYS, intro: "Example: Hoje é sexta-feira, dois de outubro." }],
+    daytimes: [{ head: ["English", "Portuguese", "in / at the …"], rows: PT_TOD.map(r => [r[0], r[1], r[3] || ""]) }],
+    clock: [
+      { title: "Hours", intro: "Que horas são? = What time is it?", head: ["Hour", "It's …", "At …"], rows: PT_HOURS.map((h, i) => [String(i + 1), i ? "são " + h : "é uma (hora)", i ? "às " + h : "à uma"]).concat([["12", "é meio-dia / é meia-noite", "ao meio-dia / à meia-noite"]]) },
+      { title: "Minutes", head: ["Time", "Portuguese"], rows: PT_MIN }
+    ],
+    months: [{ head: ["English", "Portuguese", "in …"], rows: PT_MONTHS.map((m, i) => [PL_MONTHS[i][0], m, "em " + m]), intro: "Dates use de: 2 de outubro. The 1st is primeiro: 1º de maio." }]
+  }
+};
+const NOTES = {
+  pl: [
+    { title: "Aspect", intro: "Most verbs come in pairs. Imperfective (robić) is the process or a habit and has a present tense. Perfective (zrobić) is one finished result and has no present: its present-looking forms are the future.", head: ["Tense", "Imperfective", "Perfective", "Gender?"], rows: [["Present", "robię", "—", "No"], ["Past", "robiłem / robiłam", "zrobiłem / zrobiłam", "Yes"], ["Future", "będę robić / będę robił(a)", "zrobię", "Yes, in będę + -ł"], ["Conditional", "robiłbym / robiłabym", "zrobiłbym / zrobiłabym", "Yes"], ["Imperative", "rób!", "zrób!", "No"]] },
+    { title: "Past tense endings", intro: "Drop -ć from the infinitive, add ł plus the ending: czyta-ć → czytał-. Virile plural (oni) is any group with a man; non-virile (one) is women, things or animals.", head: ["Person", "m", "f", "n"], rows: [["ja", "-łem", "-łam", "—"], ["ty", "-łeś", "-łaś", "—"], ["on / ona / ono", "-ł", "-ła", "-ło"], ["my", "-liśmy (virile)", "-łyśmy (non-virile)", ""], ["wy", "-liście (virile)", "-łyście (non-virile)", ""], ["oni / one", "-li (virile)", "-ły (non-virile)", ""]] },
+    { title: "Conditional", intro: "Past form + -by- + person ending: czytałbym, czytałabyś, czytalibyśmy. The -by- can float forward: Ja bym to zrobił = Zrobiłbym to. Chciałbym / chciałabym (I would like) is the polite way to ask for anything." },
+    { title: "Three present-tense patterns", head: ["Pattern", "Model", "Also"], rows: [["-am / -asz", "czytam, czytasz", "grać, mieszkać, pytać, słuchać"], ["-ę / -esz", "piszę, piszesz", "brać, pić, chcieć, jechać"], ["-ę / -isz (-ysz)", "robię, robisz", "mówić, lubić, uczyć się, słyszeć"]] }
+  ],
+  pt: [
+    { title: "Pronouns", intro: "Você, a gente and ele / ela all take the 3rd-person singular; vocês and eles / elas take the 3rd-person plural.", head: ["Pronoun", "Meaning", "Verb form"], rows: [["eu", "I", "1st singular"], ["tu", "you (informal, regional)", "2nd singular"], ["você", "you (everyday default)", "3rd singular"], ["ele / ela", "he / she", "3rd singular"], ["nós", "we", "1st plural"], ["a gente", "we (very common in speech)", "3rd singular"], ["vocês", "you all", "3rd plural"], ["eles / elas", "they", "3rd plural"]] },
+    { title: "Where gender shows", intro: "The verb never changes for gender; participles and adjectives agree with the subject. Compounds with ter never change: ela tinha comido.", head: ["Situation", "Masculine", "Feminine"], rows: [["Thanks", "obrigado", "obrigada"], ["estar + adjective", "estou cansado", "estou cansada"], ["Passive", "ele foi convidado", "ela foi convidada"], ["Resulting state", "o jogo está terminado", "a partida está terminada"]] },
+    { title: "Subjunctive triggers", head: ["Subjunctive", "Trigger", "Example"], rows: [["Presente", "que… (wishes, doubt, emotion)", "Espero que você fale com ele."], ["Imperfeito", "se… (unreal if), past wishes", "Se eu tivesse tempo, jogaria mais."], ["Futuro", "quando…, se… (real future)", "Quando você chegar, me liga."]] },
+    { title: "Compound and continuous tenses", intro: "Tenho falado means “I've been speaking (repeatedly)”, not “I have spoken” (that's falei).", head: ["Tense", "Formation", "Example"], rows: [["Perfeito composto", "tenho + participle", "Tenho treinado muito."], ["Mais-que-perfeito", "tinha + participle", "Eu já tinha comido."], ["Futuro composto", "terei + participle", "Terei terminado até sexta."], ["Condicional composto", "teria + participle", "Teria ganhado com mais sorte."], ["Pluperfect subjunctive", "tivesse + participle", "Se tivesse sabido, teria vindo."], ["Presente contínuo", "estar + gerund", "Estou aprendendo polonês."], ["Futuro próximo", "ir + infinitive", "Vou jogar amanhã."]] },
+    { title: "Irregular participles", head: ["Verb", "Participle"], rows: [["fazer", "feito"], ["dizer", "dito"], ["ver", "visto"], ["escrever", "escrito"], ["abrir", "aberto"], ["pôr", "posto"], ["vir", "vindo"], ["ganhar", "ganho"], ["pagar", "pago"], ["gastar", "gasto"]] },
+    { title: "Spoken Brazilian shortcuts", intro: "The simple future is formal: people say vou falar. The condicional often becomes the imperfeito (eu gostava de… for eu gostaria de…). Colocar usually replaces pôr in speech." }
+  ]
+};
+
 /* ---------- state ---------- */
 const KEY = "revision-cards:v1";
-const defaults = () => ({ lang: "pl", mode: "flash", topics: { pl: ["forms", "meanings"], pt: ["forms", "meanings"] }, tenses: { pl: Object.keys(PL_TENSES), pt: Object.keys(PT_TENSES) }, known: {}, includeKnown: false, best: {}, qlen: 10 });
+const defaults = () => ({ lang: "pl", mode: "flash", refSec: "verbs", refVerb: { pl: 0, pt: 0 }, topics: { pl: ["forms", "meanings"], pt: ["forms", "meanings"] }, tenses: { pl: Object.keys(PL_TENSES), pt: Object.keys(PT_TENSES) }, known: {}, includeKnown: false, best: {}, qlen: 10 });
 let S = defaults();
 try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(defaults(), JSON.parse(raw)); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
@@ -351,6 +436,7 @@ function renderChrome() {
     `<button class="chip" data-topic="${k}" aria-pressed="${S.topics[S.lang].includes(k)}">${label}<span class="n">${counts[k] || 0}</span></button>`).join("");
   document.getElementById("tenseChips").innerHTML = Object.entries(TENSES[S.lang]).map(([k, label]) =>
     `<button class="chip" data-tense="${k}" aria-pressed="${S.tenses[S.lang].includes(k)}">${label}</button>`).join("");
+  document.getElementById("filters").hidden = S.mode === "ref";
   document.getElementById("tenseGroup").style.display = S.topics[S.lang].includes("forms") ? "" : "none";
   const names = TOPICS[S.lang].filter(([k]) => S.topics[S.lang].includes(k)).map(t => t[1]);
   document.getElementById("filterSum").textContent = names.length ? names.join(", ") : "Nothing picked";
@@ -373,7 +459,39 @@ document.getElementById("filters").addEventListener("click", e => {
 });
 
 const view = document.getElementById("view");
-function startMode() { S.mode === "flash" ? newRound() : quizSetup(); }
+function startMode() { if (S.mode === "ref") return renderRef(); S.mode === "flash" ? newRound() : quizSetup(); }
+
+/* ---------- tables mode ---------- */
+function tableHTML(head, rows, rowClass, wrap) {
+  return `<div class="tablewrap${wrap ? " wrap" : ""}"><table><thead><tr>${head.map(h => `<th scope="col">${esc(h)}</th>`).join("")}</tr></thead><tbody>${
+    rows.map((r, i) => `<tr${rowClass && rowClass(i) ? ' class="f"' : ""}>${r.map((c, j) => j === 0 ? `<th scope="row">${esc(c)}</th>` : `<td>${esc(c)}</td>`).join("")}</tr>`).join("")
+  }</tbody></table></div>`;
+}
+function renderRef() {
+  const L = S.lang, sec = S.refSec;
+  let body = "";
+  if (sec === "verbs") {
+    const list = TABLES[L], idx = Math.min(S.refVerb[L] || 0, list.length - 1), t = list[idx];
+    body += `<div class="picker"><label for="verbPick">Verb</label><select id="verbPick">${list.map((v, i) => `<option value="${i}" ${i === idx ? "selected" : ""}>${esc(v.verb)} (${esc(v.en)})</option>`).join("")}</select></div>`;
+    body += `<div class="verbhead"><span class="inf">${esc(t.verb)}</span><span class="en">${esc(t.en)}</span></div>`;
+    if (L === "pl") body += `<p class="legend"><i></i> Shaded rows are feminine and non-virile forms</p>`;
+    t.groups.forEach(g => {
+      if (g.title) body += `<h3>${esc(g.title)}</h3>`;
+      const rows = g.rows.map((p, i) => [p, ...g.cols.map(c => c[1][i])]);
+      body += tableHTML(["", ...g.cols.map(c => c[0])], rows, L === "pl" ? i => GEN[i] === 1 || GEN[i] === 4 : null);
+    });
+    if (t.extra) body += `<p class="extra">${esc(t.extra)}</p>`;
+  } else if (sec === "notes") {
+    NOTES[L].forEach(n => { body += `<h3>${esc(n.title)}</h3>${n.intro ? `<p>${esc(n.intro)}</p>` : ""}${n.head ? tableHTML(n.head, n.rows, null, true) : ""}`; });
+  } else {
+    REF[L][sec].forEach(b => { body += `${b.title ? `<h3>${esc(b.title)}</h3>` : ""}${b.intro ? `<p>${esc(b.intro)}</p>` : ""}${tableHTML(b.head, b.rows)}`; });
+  }
+  view.innerHTML = `<div class="ref"><div class="refnav" role="group" aria-label="Section">${REF_SECTIONS.map(([k, label]) => `<button class="chip" data-sec="${k}" aria-pressed="${k === sec}">${label}</button>`).join("")}</div>${body}</div>`;
+  const on = view.querySelector('.refnav [aria-pressed="true"]'); if (on) view.querySelector(".refnav").scrollLeft = Math.max(0, on.offsetLeft - 16);
+  view.querySelector(".refnav").onclick = e => { const b = e.target.closest("[data-sec]"); if (!b) return; S.refSec = b.dataset.sec; save(); renderRef(); };
+  const pick = document.getElementById("verbPick");
+  if (pick) pick.onchange = () => { S.refVerb[L] = +pick.value; save(); renderRef(); };
+}
 
 /* ---------- flashcards ---------- */
 let queue = [], flipped = false;

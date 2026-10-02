@@ -1,6 +1,6 @@
 # Revision cards: Polish & Brazilian Portuguese
 
-Flashcards and quizzes for Polish and Brazilian Portuguese verbs, days, times of day, clock time and months.
+Flashcards, quizzes and full reference tables for Polish and Brazilian Portuguese verbs, days, times of day, clock time and months.
 
 It's a plain static site with no build step: everything lives in `index.html`.
 
@@ -20,8 +20,8 @@ Import the repo in Vercel and leave everything on the defaults: Framework preset
 
 ## Adding or changing cards
 
-Edit `index.html` in GitHub (pencil icon), commit, and Vercel redeploys automatically. Card data sits in clearly labelled blocks near the top of the `<script>`: `PLV` (Polish verb tables), `PL_MEAN`, `PL_DAYS`, `PTV` (Portuguese verb tables), `PT_MEAN`, and so on.
+Edit `index.html` in GitHub (pencil icon), commit, and Vercel redeploys automatically. Card data sits in clearly labelled blocks near the top of the `<script>`: `PLV` (Polish verb tables), `PL_MEAN`, `PL_DAYS`, `PTV` (Portuguese verb tables), `PT_MEAN`, and so on. The Tables tab builds itself from the same data, plus the `REF` and `NOTES` blocks.
 
-When you change the app, bump `CACHE = "revision-cards-v1"` in `sw.js` to `v2` so phones pick up the new version straight away.
+When you change the app, bump the version in `CACHE = "revision-cards-v2"` in `sw.js` (v2 → v3, and so on) so phones pick up the new version straight away.
 
 Progress (known cards, best scores) is saved in each browser, so it doesn't sync between devices.

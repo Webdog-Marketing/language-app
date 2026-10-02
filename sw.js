@@ -1,5 +1,5 @@
 // Offline support: the app shell is cached on first visit, fonts as they load.
-const CACHE = "revision-cards-v1";
+const CACHE = "revision-cards-v2";
 const SHELL = ["/", "/index.html", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png", "/apple-touch-icon.png", "/favicon.png"];
 
 self.addEventListener("install", e => {
